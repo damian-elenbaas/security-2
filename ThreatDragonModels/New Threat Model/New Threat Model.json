@@ -912,15 +912,6 @@
           }
         ],
         "description": "osiris"
-      },
-      {
-        "id": 1,
-        "title": "Osiris lvl 1",
-        "diagramType": "Generic",
-        "placeholder": "New generic diagram description",
-        "thumbnail": "./public/content/images/thumbnail.jpg",
-        "version": "2.4.1",
-        "cells": []
       }
     ],
     "diagramTop": 2,
