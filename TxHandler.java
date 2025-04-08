@@ -42,10 +42,8 @@ public class TxHandler {
                 }
             }
             // No key set, so no linking UTXO found.
-            if (!inputLinks.containsKey(input)) {
-                System.out.println("UTXO not found in pool: " + input.prevTxHash + ", " + input.outputIndex);
+            if (!inputLinks.containsKey(input))
                 return false;
-            }
 
             var utxo = inputLinks.get(input);
             var prevOutput = this.utxoPool.getTxOutput(utxo);
@@ -58,58 +56,41 @@ public class TxHandler {
 
             var inputIndex = input.outputIndex;
             var output = utxo.getIndex();
-            if (inputIndex != output) {
-                System.out.println("Input index does not match UTXO index: " + inputIndex + ", " + output);
+            if (inputIndex != output)
                 return false;
-            }
 
             var inputTxhash = input.prevTxHash;
             var utxoTxhash = utxo.getTxHash();
-            if (!Arrays.equals(inputTxhash, utxoTxhash)) {
-                System.out.println("Input transaction hash does not match UTXO transaction hash: " + Arrays.toString(inputTxhash) + ", " + Arrays.toString(utxoTxhash));
+            if (!Arrays.equals(inputTxhash, utxoTxhash))
                 return false;
-            }
 
-            var address = this.utxoPool.getTxOutput(utxo).address;
-            var message = tx.getRawDataToSign(input.outputIndex);
-
-            var isValidSignature = address.verifySignature(message, input.prevTxHash);
-            if (!isValidSignature) {
-                System.out.println("Invalid signature for input: " + Arrays.toString(input.prevTxHash) + ", " + input.outputIndex);
+            var message = tx.getRawDataToSign(inputs.indexOf(input));
+            var publickey = this.utxoPool.getTxOutput(utxo).address;
+            boolean isValidSignature = publickey.verifySignature(message, input.signature);
+            if (!isValidSignature)
                 return false;
-            }
         }
 
         // (3) no utxo is claimed multiple times by tx
         var claimedUtxos = inputLinks.values();
         var uniqueUtxos = claimedUtxos.stream().distinct().toList();
-        if (claimedUtxos.size() != uniqueUtxos.size()) {
-            System.out.println("UTXO claimed multiple times: " + claimedUtxos.size() + ", " + uniqueUtxos.size());
+        if (claimedUtxos.size() != uniqueUtxos.size())
             return false;
-        }
 
         // (4) all of tx’s output values are non-negative, and
         var outputs = tx.getOutputs();
         var outputSum = 0.0;
         for (var output : outputs) {
             var value = output.value;
-            if (value < 0) {
-                System.out.println("Output value is negative: " + value);
+            if (value < 0)
                 return false;
-            }
             outputSum += value;
         }
 
         // (5) the sum of tx’s input values is greater than or equal to the sum of
         // its output values;
         // and false otherwise.
-
-        if (inputSum < outputSum) {
-            System.out.println("Input sum is less than output sum: " + inputSum + ", " + outputSum);
-            return false;
-        }
-
-        return true;
+        return !(inputSum < outputSum);
     }
 
     /*
