@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TxHandler {
@@ -103,8 +104,25 @@ public class TxHandler {
      * and updating the current UTXO pool as appropriate.
      */
     public Transaction[] handleTxs(Transaction[] possibleTxs) {
-        // IMPLEMENT THIS
-        return null;
+        var acceptedTxs = new ArrayList<Transaction>();
+        for (var tx : possibleTxs) {
+            if (isValidTx(tx)) {
+                acceptedTxs.add(tx);
+                var inputs = tx.getInputs();
+                for (var input : inputs) {
+                    var utxo = new UTXO(input.prevTxHash, input.outputIndex);
+                    this.utxoPool.removeUTXO(utxo);
+                }
+                var outputs = tx.getOutputs();
+                var index = 0;
+                for (var output : outputs) {
+                    var utxo = new UTXO(tx.getHash(), index);
+                    this.utxoPool.addUTXO(utxo, output);
+                    index += 1;
+                }
+            }
+        }
+        return acceptedTxs.toArray(new Transaction[0]);
     }
 
 }
