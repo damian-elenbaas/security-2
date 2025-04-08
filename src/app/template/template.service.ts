@@ -1,8 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
 import { TemplateDocument, Template } from './template.schema';
+import { Buffer } from 'buffer';
+import sharp from 'sharp';
+import logger from 'src/logger';
 
 @Injectable()
 export class TemplateService {
@@ -20,7 +22,7 @@ export class TemplateService {
 		content: string,
 		templateImage: string,
 	): Promise<Template> {
-		if (!this.checkIfBase64(templateImage))
+		if (!await this.checkIfBase64(templateImage))
 			throw new HttpException('Invalid input', HttpStatus.BAD_REQUEST);
 		const template = new this.templateModel({
 			name: name,
@@ -36,7 +38,7 @@ export class TemplateService {
 				);
 			}
 
-			console.log('Error: ', err.message);
+			logger.error('Error: ', err.message);
 			throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 		});
 
@@ -55,7 +57,7 @@ export class TemplateService {
 
 	async updateTemplate(id: string, template: Template): Promise<Template> {
 		if (template.templateImage !== undefined) {
-			if (!this.checkIfBase64(template.templateImage))
+			if (!await this.checkIfBase64(template.templateImage))
 				throw new HttpException(
 					'Invalid input',
 					HttpStatus.BAD_REQUEST,
@@ -79,7 +81,7 @@ export class TemplateService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 	}
@@ -94,8 +96,16 @@ export class TemplateService {
 		return template;
 	}
 
-	checkIfBase64(str: string) {
-		if (str.match(/data:image\/(png|jpg|jpeg);base64,/)) return true;
-		return false;
+	async checkIfBase64(str: string) {
+		const matches = str.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
+		if (!matches) return false;
+		const base64Data = matches[2];
+		const buffer = Buffer.from(base64Data, 'base64');
+		try {
+			const metadata = await sharp(buffer).metadata();
+			return !!metadata.format;
+		  } catch (err) {
+			return false;
+		  }
 	}
 }

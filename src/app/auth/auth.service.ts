@@ -11,6 +11,7 @@ import { User, UserDocument } from '../user/user.schema';
 import { Role } from '../models/auth.model';
 import { OrganisationService } from '../organisation/organisation.service';
 import { userInfo } from 'os';
+import logger from 'src/logger';
 
 @Injectable()
 export class AuthService {
@@ -130,7 +131,7 @@ export class AuthService {
 						HttpStatus.BAD_REQUEST,
 					);
 				}
-
+//Dus als je alleen password meegeeft hoeft het oude ww niet overeen te komen -> is dat een probleem als admin? Maar dan wel als je token weet te onderscheppen
 				newHashedPassword = await this.hashPassword(password);
 			} else {
 				const newPassword = identity.newPassword;
@@ -242,6 +243,7 @@ export class AuthService {
 			sign(
 				{ id: user.id },
 				process.env.JWT_SECRET,
+				{ expiresIn: '1h' },
 				(err: Error, token: string) => {
 					if (err) reject(err);
 					else resolve(token);

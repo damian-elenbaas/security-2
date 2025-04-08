@@ -5,6 +5,7 @@ import { Role } from '../models/auth.model';
 import { User, UserDocument } from './user.schema';
 import { Organisation } from '../organisation/organisation.schema';
 import { Identity } from '../auth/identity.schema';
+import logger from 'src/logger';
 
 @Injectable()
 export class UserService {
@@ -54,7 +55,7 @@ export class UserService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 	}

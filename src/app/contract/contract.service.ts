@@ -6,6 +6,7 @@ import { UserService } from '../user/user.service';
 import { OrganisationService } from '../organisation/organisation.service';
 import { FieldService } from '../field/field.service';
 import * as mongoose from 'mongoose';
+import logger from 'src/logger';
 
 @Injectable()
 export class ContractService {
@@ -55,7 +56,7 @@ export class ContractService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 		} catch (e) {

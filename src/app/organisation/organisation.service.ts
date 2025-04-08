@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { UserService } from '../user/user.service';
 
 import { OrganisationDocument, Organisation } from './organisation.schema';
+import * as sharp from 'sharp';
+import logger from 'src/logger';
 
 @Injectable()
 export class OrganisationService {
@@ -23,7 +25,7 @@ export class OrganisationService {
 		country: string,
 		representative: string
 	): Promise<Organisation> {
-		if (!this.checkIfBase64(organisationImage))
+		if (!await this.checkIfBase64(organisationImage))
 			throw new HttpException('Invalid input', HttpStatus.BAD_REQUEST);
 		const organisation = new this.organisationModel({
 			name: name,
@@ -44,7 +46,7 @@ export class OrganisationService {
 				);
 			}
 
-			console.log('Error: ', err.message);
+			logger.error('Error: ', err.message);
 			throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 		});
 		return organisation;
@@ -59,7 +61,7 @@ export class OrganisationService {
 		organisation: Organisation,
 	): Promise<Organisation> {
 		if (organisation.organisationImage !== undefined) {
-			if (!this.checkIfBase64(organisation.organisationImage))
+			if (!await this.checkIfBase64(organisation.organisationImage))
 				throw new HttpException(
 					'Invalid input',
 					HttpStatus.BAD_REQUEST,
@@ -82,7 +84,7 @@ export class OrganisationService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 	}
@@ -130,9 +132,19 @@ export class OrganisationService {
 		return org;
 	}
 
-	checkIfBase64(str: string) {
-		if (str.match(/data:image\/(png|jpg|jpeg);base64,/)) return true;
-		return false;
+
+	async checkIfBase64(str: string) {
+		const matches = str.match(/^data:image\/(png|jpg|jpeg);base64,(.+)$/);
+		if (!matches) return false;
+		const base64Data = matches[2];
+		const buffer = Buffer.from(base64Data, 'base64');
+		try {
+			const metadata = await sharp(buffer).metadata();
+			return !!metadata.format;
+		  } catch (err) {
+			console.error(err);
+			return false;
+		  }
 	}
 
 	async getOrganisationUserCount(organisationId: string): Promise<number> {

@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category, CategoryDocument } from './category.schema';
+import logger from 'src/logger';
 
 @Injectable()
 export class CategoryService {
@@ -23,7 +24,7 @@ export class CategoryService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 		} catch (e) {
@@ -59,7 +60,7 @@ export class CategoryService {
 						HttpStatus.BAD_REQUEST,
 					);
 				}
-			console.log('Error: ', err.message);
+			logger.error('Error: ', err.message);
 			throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 		});
 	}

@@ -5,11 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { TokenMiddleware } from './auth/token.middleware';
 import { DataModule } from './data.module';
+import { LoggingMiddleware } from 'src/logger.middleware';
+import logger from 'src/logger';
 
 @Module({
 	imports: [
 		MongooseModule.forRoot(
-			`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PWD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`,
+			`mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`,
 			//`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PWD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`,
 		),
 		AuthModule,
@@ -30,10 +32,11 @@ import { DataModule } from './data.module';
 })
 export class AppModule {
 	configure(consumer: MiddlewareConsumer) {
-		console.log(`CONNECTION STRINTG: mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PWD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`)
+		logger.info(`CONNECTION STRINTG: mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PWD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`)
 		consumer
 			.apply(TokenMiddleware)
 			.exclude({ path: 'api/auth/login', method: RequestMethod.POST })
 			.forRoutes('*');
+		consumer.apply(LoggingMiddleware).forRoutes('*');
 	}
 }

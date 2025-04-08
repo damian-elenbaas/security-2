@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Field, FieldDocument } from './field.schema';
 import { CategoryService } from '../category/category.service';
 import { Category } from '../category/category.schema';
+import logger from 'src/logger';
 
 @Injectable()
 export class FieldService {
@@ -37,7 +38,7 @@ export class FieldService {
 					);
 				}
 
-				console.log('Error: ', err.message);
+				logger.error('Error: ', err.message);
 				throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 			});
 		}
@@ -75,7 +76,7 @@ export class FieldService {
 						);
 					}
 
-					console.log('Error: ', err.message);
+					logger.error('Error: ', err.message);
 					throw new HttpException('Error', HttpStatus.BAD_REQUEST);
 				});
 		}

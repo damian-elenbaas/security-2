@@ -21,6 +21,7 @@ import { User } from '../user/user.schema';
 
 import { AuthService } from './auth.service';
 import { InjectToken, Token } from './token.decorator';
+import logger from 'src/logger';
 
 @Controller()
 export class AuthController {
@@ -48,7 +49,7 @@ export class AuthController {
 				),
 			};
 		} catch (e) {
-			console.log(e);
+			logger.error(e);
 
 			if (identityUser != null) {
 				await this.authService.deleteIdentity(identityUser.id);
@@ -89,7 +90,7 @@ export class AuthController {
 					userInfo.organisations
 				);
 		} catch (e) {
-			console.log(e);
+			logger.error(e);
 
 			if (identityUser != null) {
 				await this.authService.deleteIdentity(identityUser.id);
@@ -116,7 +117,7 @@ export class AuthController {
 				),
 			};
 		} catch (e) {
-			console.log(e);
+			logger.error(e);
 			throw new HttpException(
 				'Invalid credentials',
 				HttpStatus.UNAUTHORIZED,
