@@ -43,6 +43,7 @@ public class TxHandler {
             }
             // No key set, so no linking UTXO found.
             if (!inputLinks.containsKey(input)) {
+                System.out.println("UTXO not found in pool: " + input.prevTxHash + ", " + input.outputIndex);
                 return false;
             }
 
@@ -58,12 +59,23 @@ public class TxHandler {
             var inputIndex = input.outputIndex;
             var output = utxo.getIndex();
             if (inputIndex != output) {
+                System.out.println("Input index does not match UTXO index: " + inputIndex + ", " + output);
                 return false;
             }
 
             var inputTxhash = input.prevTxHash;
             var utxoTxhash = utxo.getTxHash();
             if (!Arrays.equals(inputTxhash, utxoTxhash)) {
+                System.out.println("Input transaction hash does not match UTXO transaction hash: " + Arrays.toString(inputTxhash) + ", " + Arrays.toString(utxoTxhash));
+                return false;
+            }
+
+            var address = this.utxoPool.getTxOutput(utxo).address;
+            var message = tx.getRawDataToSign(input.outputIndex);
+
+            var isValidSignature = address.verifySignature(message, input.prevTxHash);
+            if (!isValidSignature) {
+                System.out.println("Invalid signature for input: " + Arrays.toString(input.prevTxHash) + ", " + input.outputIndex);
                 return false;
             }
         }
@@ -72,6 +84,7 @@ public class TxHandler {
         var claimedUtxos = inputLinks.values();
         var uniqueUtxos = claimedUtxos.stream().distinct().toList();
         if (claimedUtxos.size() != uniqueUtxos.size()) {
+            System.out.println("UTXO claimed multiple times: " + claimedUtxos.size() + ", " + uniqueUtxos.size());
             return false;
         }
 
@@ -81,6 +94,7 @@ public class TxHandler {
         for (var output : outputs) {
             var value = output.value;
             if (value < 0) {
+                System.out.println("Output value is negative: " + value);
                 return false;
             }
             outputSum += value;
@@ -90,7 +104,8 @@ public class TxHandler {
         // its output values;
         // and false otherwise.
 
-        if (inputSum != outputSum) {
+        if (inputSum < outputSum) {
+            System.out.println("Input sum is less than output sum: " + inputSum + ", " + outputSum);
             return false;
         }
 
